@@ -188,6 +188,7 @@ mise exec -- npx wrangler deploy
 | `SCREENSHOT_API_URL` | — | 第三方 API 模板（含 `{key}` 和 `{html}` 占位符） |
 | `SCREENSHOT_API_KEYS` | — | 第三方 API key 列表（逗号分隔，故障自动转移） |
 | `MAX_CONCURRENT_EMAILS` | `3` | 并发处理邮件数（建议 2-5） |
+| `RETRY_COUNT` | `2` | 截图/推送失败重试次数（指数退避） |
 | `LOG_LEVEL` | `info` | 日志级别：`error` \| `warn` \| `info` \| `debug` |
 | `MAIL_FROM_FILTER` | — | 发件人过滤（完整邮箱或域名后缀，逗号分隔） |
 | `MAIL_SUBJECT_PREFIX` | — | 主题前缀过滤（逗号分隔） |

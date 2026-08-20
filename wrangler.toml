@@ -28,6 +28,8 @@ SCREENSHOT_API_URL = ""
 SCREENSHOT_API_KEYS = ""
 # 并发处理邮件数（多封邮件同时截图+推送），默认 3，建议 2-5
 MAX_CONCURRENT_EMAILS = "3"
+# 重试次数（截图/推送失败指数退避重试），默认 2
+RETRY_COUNT = "2"
 # 日志级别：error | warn | info | debug，默认 info
 LOG_LEVEL = "info"
 # 可选过滤：只处理发件人匹配的邮件（完整邮箱或域名后缀，逗号分隔可多个，留空不过滤）

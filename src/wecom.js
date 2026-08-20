@@ -1,6 +1,5 @@
 // 企业微信推送封装：群机器人 webhook（path/91770）+ 自建应用消息（path/90236）
-
-import { retryWithBackoff, log } from './utils.js';
+// 重试由调用方（index.js）统一控制，本模块只负责单次 API 调用
 
 const API_BASE = 'https://qyapi.weixin.qq.com/cgi-bin';
 
@@ -22,24 +21,18 @@ async function postJson(url, body) {
 export async function sendImageToGroup(webhookKey, imageBytes) {
   const bytes = new Uint8Array(imageBytes);
   const base64 = bytesToBase64(bytes);
-  const md5 = await md5Hex(bytes);
-  return retryWithBackoff(
-    () => postJson(`${API_BASE}/webhook/send?key=${encodeURIComponent(webhookKey)}`, {
-      msgtype: 'image',
-      image: { base64, md5 },
-    }),
-    { maxRetries: 2, baseDelayMs: 1000 },
-  );
+  const md5 = md5Hex(bytes);
+  return postJson(`${API_BASE}/webhook/send?key=${encodeURIComponent(webhookKey)}`, {
+    msgtype: 'image',
+    image: { base64, md5 },
+  });
 }
 
 export async function sendTextToGroup(webhookKey, content, mentionedList = [], mentionedMobileList = []) {
   const body = { msgtype: 'text', text: { content } };
   if (mentionedList.length) body.text.mentioned_list = mentionedList;
   if (mentionedMobileList.length) body.text.mentioned_mobile_list = mentionedMobileList;
-  return retryWithBackoff(
-    () => postJson(`${API_BASE}/webhook/send?key=${encodeURIComponent(webhookKey)}`, body),
-    { maxRetries: 2, baseDelayMs: 1000 },
-  );
+  return postJson(`${API_BASE}/webhook/send?key=${encodeURIComponent(webhookKey)}`, body);
 }
 
 // ---------- 自建应用 ----------
@@ -54,48 +47,28 @@ export async function getAccessToken(corpId, corpSecret) {
   return data.access_token;
 }
 
-// 上传图片素材；FormData 必须在每次重试时重建（body stream 只能消费一次）
+// 上传图片素材；FormData 在闭包内部创建，支持调用方重试
 export async function uploadImage(token, imageBytes) {
-  return retryWithBackoff(
-    async () => {
-      const form = new FormData();
-      form.append('media', new Blob([imageBytes], { type: 'image/png' }), 'mail-screenshot.png');
-      const resp = await fetch(`${API_BASE}/media/upload?access_token=${token}&type=image`, {
-        method: 'POST',
-        body: form,
-      });
-      const data = await resp.json();
-      if (data.errcode !== 0) {
-        throw new Error(`素材上传失败 errcode=${data.errcode} errmsg=${data.errmsg}`);
-      }
-      return data.media_id;
-    },
-    { maxRetries: 2, baseDelayMs: 1000 },
-  );
+  const form = new FormData();
+  form.append('media', new Blob([imageBytes], { type: 'image/png' }), 'mail-screenshot.png');
+  const resp = await fetch(`${API_BASE}/media/upload?access_token=${token}&type=image`, {
+    method: 'POST',
+    body: form,
+  });
+  const data = await resp.json();
+  if (data.errcode !== 0) {
+    throw new Error(`素材上传失败 errcode=${data.errcode} errmsg=${data.errmsg}`);
+  }
+  return data.media_id;
 }
 
 export async function sendAppImage(token, agentId, mediaId, touser) {
-  return retryWithBackoff(
-    () => postJson(`${API_BASE}/message/send?access_token=${token}`, {
-      touser,
-      msgtype: 'image',
-      agentid: agentId,
-      image: { media_id: mediaId },
-    }),
-    { maxRetries: 2, baseDelayMs: 1000 },
-  );
-}
-
-export async function sendAppText(token, agentId, content, touser) {
-  return retryWithBackoff(
-    () => postJson(`${API_BASE}/message/send?access_token=${token}`, {
-      touser,
-      msgtype: 'text',
-      agentid: agentId,
-      text: { content },
-    }),
-    { maxRetries: 2, baseDelayMs: 1000 },
-  );
+  return postJson(`${API_BASE}/message/send?access_token=${token}`, {
+    touser,
+    msgtype: 'image',
+    agentid: agentId,
+    image: { media_id: mediaId },
+  });
 }
 
 // ---------- 编码工具 ----------
@@ -109,11 +82,7 @@ function bytesToBase64(bytes) {
   return btoa(binary);
 }
 
-async function md5Hex(bytes) {
-  return md5(bytes);
-}
-
-function md5(bytes) {
+function md5Hex(bytes) {
   const K = [];
   for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000);
   const S = [
