@@ -1,0 +1,19 @@
+{
+  "name": "wecom-email-screenshot",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "WTFPL",
+  "description": "邮件截图推送到企业微信群的 Cloudflare Worker，供 WooCommerce webhook 调用",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "node --check src/index.js && node --check src/imap.js && node --check src/wecom.js && node --check src/eml.js && node --check src/screenshot.js && node --check src/utils.js",
+    "test": "node test/eml.test.js"
+  },
+  "devDependencies": {
+    "wrangler": "^3.100.0"
+  },
+  "allowScripts": {
+    "workerd@1.20250718.0": true
+  }
+}

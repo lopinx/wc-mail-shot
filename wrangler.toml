@@ -1,0 +1,45 @@
+name = "wecom-email-screenshot"
+main = "src/index.js"
+compatibility_date = "2025-08-20"
+
+# Browser Rendering API（HTML → 截图）
+[browser]
+binding = "BROWSER"
+
+# 环境变量（非敏感信息）
+[vars]
+# 企业邮箱 IMAP 服务器与端口（企业邮箱 IMAPS 默认 993）
+IMAP_HOST = "imap.exmail.qq.com"
+IMAP_PORT = "993"
+# 收信邮箱地址（用于登录 IMAP 的账号）
+IMAP_USER = ""
+# 群机器人 webhook key（从群机器人设置中获取）；非空即启用 webhook 通道
+WEBHOOK_KEY = ""
+# 自建应用通道（CORP_ID 与 AGENT_ID 同时填写即启用，可与 webhook 并存）
+WECOM_CORP_ID = ""
+WECOM_AGENT_ID = ""
+# 应用消息接收人：userid 以 | 分隔，@all 表示所有人；可被请求体 app_touser 覆盖
+WECOM_TOUSER = "@all"
+# 截图方式：'browser' 或 'api'，默认 'browser'
+SCREENSHOT_MODE = "browser"
+# 第三方截图 API 的 URL 模板，支持 {key} 和 {html} 占位符
+SCREENSHOT_API_URL = ""
+# 第三方截图 API 的 key 列表，逗号分隔（多个 key 自动轮询）
+SCREENSHOT_API_KEYS = ""
+# 并发处理邮件数（多封邮件同时截图+推送），默认 3，建议 2-5
+MAX_CONCURRENT_EMAILS = "3"
+# 日志级别：error | warn | info | debug，默认 info
+LOG_LEVEL = "info"
+# 可选过滤：只处理发件人匹配的邮件（完整邮箱或域名后缀，逗号分隔可多个，留空不过滤）
+MAIL_FROM_FILTER = ""
+# 可选过滤：只处理主题以该前缀开头的邮件（逗号分隔可多个，留空不过滤）
+MAIL_SUBJECT_PREFIX = ""
+# 可选 @群员：userid 列表（逗号分隔，@all 表示所有人）
+MENTIONED_LIST = ""
+# 可选 @群员：手机号列表（逗号分隔，@all 表示所有人）
+MENTIONED_MOBILE_LIST = ""
+
+# 敏感信息通过 wrangler secret put 设置：
+# IMAP_PASSWORD - 邮箱密码或客户端专用密码
+# WECOM_CORP_SECRET - 自建应用 secret（仅启用自建应用通道时需要）
+# AUTH_TOKEN - 接口鉴权 token（WooCommerce webhook 调用时携带，为空则不校验）
